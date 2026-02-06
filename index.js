@@ -26,7 +26,7 @@ require('./models/asociaciones');
 app.use('/usuarios', require('./routes/usuario.routes'));
 app.use('/disponibilidad', require('./routes/disponibilidad.routes'));
 app.use('/tutorias', require('./routes/tutoria.routes'));
-app.use('/reportes', require('./routes/reporte.routes'));
+//app.use('/reportes', require('./routes/reporte.routes'));
 app.use('/auth', require('./routes/auth.routes'));
 
 // ================= RUTA BASE =================

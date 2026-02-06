@@ -3,48 +3,22 @@ const router = express.Router();
 const controller = require('../controllers/TutoriaController');
 const auth = require('../middleware/auth.middleware');
 
-// ==================================================
-// 🔹 CREAR TUTORÍA (ESTUDIANTE)
-// ==================================================
+// Crear tutoría (solo estudiante logueado)
 router.post('/', auth, controller.crearTutoria);
 
-// ==================================================
-// 🔹 VER TUTORÍAS DEL ESTUDIANTE (TOKEN)
-// ==================================================
-router.get('/estudiante', auth, controller.obtenerTutoriasEstudiante);
+// Tutorías del estudiante (solo él mismo)
+router.get('/estudiante/:id', auth, controller.obtenerTutoriasEstudiante);
 
-// ==================================================
-// 🔹 VER TUTORÍAS DEL DOCENTE (TOKEN)
-// ==================================================
-router.get('/docente', auth, controller.obtenerTutoriasDocente);
+// Tutorías del docente (solo él mismo)
+router.get('/docente/:id', auth, controller.obtenerTutoriasDocente);
 
-// ==================================================
-// 🔹 EDITAR TUTORÍA (SOLO DOCENTE / PENDIENTE)
-// ==================================================
+// Editar tutoría
 router.put('/:id', auth, controller.editarTutoria);
 
-// ==================================================
-// 🔹 CAMBIAR ESTADO (CONFIRMAR / FINALIZAR)
-// ==================================================
+// Cambiar estado
 router.put('/:id/estado', auth, controller.cambiarEstadoTutoria);
 
-// ==================================================
-// 🔹 CANCELAR + PROPONER ALTERNATIVA (DOCENTE)
-// ==================================================
-router.put('/:id/cancelar', auth, controller.cancelarConPropuesta);
-
-// ==================================================
-// 🔹 ACEPTAR PROPUESTA (ESTUDIANTE)
-// ==================================================
-router.post(
-  '/propuestas/alternativas/:id/aceptar',
-  auth,
-  controller.aceptarPropuesta
-);
-
-// ==================================================
-// 🔹 HISTORIAL DE TUTORÍAS FINALIZADAS
-// ==================================================
+// Historial finalizadas
 router.get('/historial/finalizadas', auth, controller.obtenerTutoriasFinalizadas);
 
 module.exports = router;
