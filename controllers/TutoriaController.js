@@ -18,7 +18,16 @@ exports.crearTutoria = async (req, res) => {
       return res.status(403).json({ error: 'Solo estudiantes pueden solicitar tutorías' });
     }
 
-    const { docente_id, materia_id, fecha, hora_inicio, hora_fin, tema } = req.body;
+    // 🔹 AÑADIDO (NO rompe nada)
+    const {
+      docente_id,
+      materia_id,
+      fecha,
+      hora_inicio,
+      hora_fin,
+      tema,
+      numero_estudiantes_solicitados
+    } = req.body;
 
     if (!docente_id || !materia_id || !fecha || !hora_inicio || !hora_fin) {
       return res.status(400).json({ error: 'Faltan datos obligatorios' });
@@ -62,6 +71,7 @@ exports.crearTutoria = async (req, res) => {
       return res.status(400).json({ error: 'El docente ya tiene una tutoría en ese horario' });
     }
 
+    // 🔹 AÑADIDO: numero_estudiantes_solicitados
     const nueva = await Tutoria.create({
       estudiante_id: usuario.id,
       docente_id,
@@ -70,28 +80,33 @@ exports.crearTutoria = async (req, res) => {
       hora_inicio,
       hora_fin,
       tema,
+      numero_estudiantes_solicitados: numero_estudiantes_solicitados || 1,
       estado: 'pendiente'
     });
 
     const estudiante = await Usuario.findByPk(usuario.id);
     const docente = await Usuario.findByPk(docente_id);
 
+    // 🔹 CORREO MEJORADO (ESTUDIANTE)
     await enviarCorreo(
       estudiante.email,
       'Tutoría registrada',
       `<h3>Tutoría registrada correctamente</h3>
-       <p>Fecha: ${fecha}</p>
-       <p>Hora: ${hora_inicio} - ${hora_fin}</p>
-       <p>Estado: Pendiente</p>`
+       <p><strong>Fecha:</strong> ${fecha}</p>
+       <p><strong>Hora:</strong> ${hora_inicio} - ${hora_fin}</p>
+       <p><strong>Estudiantes previstos:</strong> ${nueva.numero_estudiantes_solicitados}</p>
+       <p><strong>Estado:</strong> Pendiente</p>`
     );
 
+    // 🔹 CORREO MEJORADO (DOCENTE)
     await enviarCorreo(
       docente.email,
       'Nueva solicitud de tutoría',
       `<h3>Nueva solicitud de tutoría</h3>
-       <p>Estudiante: ${estudiante.nombre}</p>
-       <p>Fecha: ${fecha}</p>
-       <p>Hora: ${hora_inicio} - ${hora_fin}</p>`
+       <p><strong>Estudiante solicitante:</strong> ${estudiante.nombre}</p>
+       <p><strong>Fecha:</strong> ${fecha}</p>
+       <p><strong>Hora:</strong> ${hora_inicio} - ${hora_fin}</p>
+       <p><strong>Número de estudiantes esperados:</strong> ${nueva.numero_estudiantes_solicitados}</p>`
     );
 
     res.json({ mensaje: 'Tutoría creada correctamente', tutoria: nueva });
@@ -166,7 +181,9 @@ exports.cambiarEstadoTutoria = async (req, res) => {
       return res.status(403).json({ error: 'Solo el docente puede cambiar el estado' });
     }
 
-    const { estado } = req.body;
+    // 🔹 AÑADIDO sin romper nada
+    const { estado, numero_estudiantes_asistieron } = req.body;
+
     const tutoria = await Tutoria.findByPk(req.params.id);
     if (!tutoria) return res.status(404).json({ error: 'Tutoría no encontrada' });
 
@@ -181,14 +198,24 @@ exports.cambiarEstadoTutoria = async (req, res) => {
       return res.status(400).json({ error: 'Transición de estado no permitida' });
     }
 
-    await tutoria.update({ estado });
+    // 🔹 AÑADIDO: solo guarda asistentes si se finaliza
+    await tutoria.update({
+      estado,
+      numero_estudiantes_asistieron:
+        estado === 'finalizada'
+          ? numero_estudiantes_asistieron ?? tutoria.numero_estudiantes_asistieron
+          : tutoria.numero_estudiantes_asistieron
+    });
 
     const estudiante = await Usuario.findByPk(tutoria.estudiante_id);
 
+    // 🔹 CORREO MEJORADO
     await enviarCorreo(
       estudiante.email,
       'Estado de tutoría actualizado',
-      `<h3>Tu tutoría ahora está ${estado.toUpperCase()}</h3>`
+      `<h3>Tu tutoría fue finalizada</h3>
+       <p><strong>Estudiantes previstos:</strong> ${tutoria.numero_estudiantes_solicitados}</p>
+       <p><strong>Estudiantes que asistieron:</strong> ${tutoria.numero_estudiantes_asistieron ?? 'No registrado'}</p>`
     );
 
     res.json({ mensaje: 'Estado actualizado correctamente' });
@@ -252,7 +279,7 @@ exports.cancelarConPropuesta = async (req, res) => {
       estudiante.email,
       'Tutoría cancelada - Nueva propuesta',
       `<h3>El docente canceló la tutoría</h3>
-       <p>Motivo: ${motivo}</p>
+       <p><strong>Motivo:</strong> ${motivo}</p>
        <p>Revisa las nuevas propuestas en el sistema.</p>`
     );
 
@@ -298,6 +325,7 @@ exports.aceptarPropuesta = async (req, res) => {
       hora_inicio: propuestaAlt.hora_inicio,
       hora_fin: propuestaAlt.hora_fin,
       tema: tutoriaOriginal.tema,
+      numero_estudiantes_solicitados: tutoriaOriginal.numero_estudiantes_solicitados,
       estado: 'confirmada'
     });
 
@@ -309,9 +337,9 @@ exports.aceptarPropuesta = async (req, res) => {
       docente.email,
       'Propuesta aceptada',
       `<h3>El estudiante aceptó tu propuesta</h3>
-       <p>Nueva tutoría confirmada</p>
-       <p>Fecha: ${propuestaAlt.fecha}</p>
-       <p>Hora: ${propuestaAlt.hora_inicio} - ${propuestaAlt.hora_fin}</p>`
+       <p><strong>Fecha:</strong> ${propuestaAlt.fecha}</p>
+       <p><strong>Hora:</strong> ${propuestaAlt.hora_inicio} - ${propuestaAlt.hora_fin}</p>
+       <p><strong>Estudiantes esperados:</strong> ${tutoriaOriginal.numero_estudiantes_solicitados}</p>`
     );
 
     res.json({
