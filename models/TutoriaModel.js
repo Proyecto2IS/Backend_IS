@@ -1,50 +1,21 @@
-const { DataTypes } = require("sequelize");
-const { sequelize } = require("../db/conexion");
-const { UsuarioModel } = require("./UsuarioModel");
-const { MateriaModel } = require("./MateriaModel");
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../db/conexion');
 
-const TutoriaModel = sequelize.define("tutorias", {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
+const Tutoria = sequelize.define('tutorias', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  estudiante_id: { type: DataTypes.INTEGER, allowNull: false },
+  docente_id: { type: DataTypes.INTEGER, allowNull: false },
+  materia_id: { type: DataTypes.INTEGER, allowNull: false },
+  fecha: { type: DataTypes.DATEONLY, allowNull: false },
+  hora_inicio: { type: DataTypes.TIME, allowNull: false },
+  hora_fin: { type: DataTypes.TIME, allowNull: false },
+  tema: { type: DataTypes.TEXT },
+  estado: {
+    type: DataTypes.ENUM('pendiente','confirmada','rechazada','cancelada','finalizada'),
+    defaultValue: 'pendiente'
   },
-  student_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  teacher_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  subject_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  date: {
-    type: DataTypes.DATEONLY,
-    allowNull: false,
-  },
-  time: {
-    type: DataTypes.TIME,
-    allowNull: false,
-  },
-  status: {
-    type: DataTypes.ENUM("pending", "approved", "rejected"),
-    defaultValue: "pending",
-  },
-}, {
-  timestamps: false,
-});
+  motivo_cancelacion: { type: DataTypes.TEXT },
+  creado_en: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
+}, { timestamps: false });
 
-// RELACIONES
-UsuarioModel.hasMany(TutoriaModel, { foreignKey: "student_id" });
-UsuarioModel.hasMany(TutoriaModel, { foreignKey: "teacher_id" });
-
-TutoriaModel.belongsTo(UsuarioModel, { foreignKey: "student_id", as: "student" });
-TutoriaModel.belongsTo(UsuarioModel, { foreignKey: "teacher_id", as: "teacher" });
-
-MateriaModel.hasMany(TutoriaModel, { foreignKey: "subject_id" });
-TutoriaModel.belongsTo(MateriaModel, { foreignKey: "subject_id" });
-
-module.exports = { TutoriaModel };
+module.exports = { Tutoria };

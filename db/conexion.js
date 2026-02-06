@@ -4,7 +4,8 @@ const {
   DB_USERNAME,
   DB_PASSWORD,
   DB_HOST,
-  DB_DATABASE
+  DB_DATABASE,
+  DB_PORT
 } = require('../config/config.js');
 
 const sequelize = new Sequelize(
@@ -13,7 +14,9 @@ const sequelize = new Sequelize(
   DB_PASSWORD,
   {
     host: DB_HOST,
-    dialect: DB_CONNECTION
+    port: DB_PORT,
+    dialect: DB_CONNECTION,
+    logging: false
   }
 );
 
