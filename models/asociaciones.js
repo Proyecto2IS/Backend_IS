@@ -3,10 +3,11 @@ const { Materia } = require('./MateriaModel');
 const { DocenteMateria } = require('./DocenteMateriaModel');
 const { DisponibilidadDocente } = require('./DisponibilidadDocenteModel');
 const { Tutoria } = require('./TutoriaModel');
-const { PropuestaDocente } = require('./PropuestaDocenteModel');
-const { PropuestaAlternativa } = require('./PropuestaAlternativaModel');
+
 const { HistorialEstados } = require('./HistorialEstadosModel');
 
+const { PropuestaDocente } = require('../models/PropuestaDocenteModel');
+const { PropuestaAlternativa } = require('../models/PropuestaAlternativaModel');
 // ==================================================
 // DOCENTE ↔ MATERIAS
 // ==================================================
