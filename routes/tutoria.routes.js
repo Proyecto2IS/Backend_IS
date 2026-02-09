@@ -4,6 +4,25 @@ const controller = require('../controllers/TutoriaController');
 const auth = require('../middleware/auth.middleware');
 
 // ==================================================
+// 🔹 GET MATERIAS (COMBO BOX)
+// ==================================================
+router.get('/materias', auth, controller.obtenerMaterias);
+
+// ==================================================
+// 🔹 GET DOCENTES POR MATERIA (COMBO BOX)
+// ==================================================
+router.get(
+  '/docentes/materia/:materiaId',
+  auth,
+  controller.obtenerDocentesPorMateria
+);
+
+// ==================================================
+// 🔹 GET ESTUDIANTES (COMBO BOX)
+// ==================================================
+router.get('/estudiantes', auth, controller.obtenerEstudiantes);
+
+// ==================================================
 // 🔹 CREAR TUTORÍA (ESTUDIANTE)
 // ==================================================
 router.post('/', auth, controller.crearTutoria);
@@ -45,6 +64,10 @@ router.post(
 // ==================================================
 // 🔹 HISTORIAL DE TUTORÍAS FINALIZADAS
 // ==================================================
-router.get('/historial/finalizadas', auth, controller.obtenerTutoriasFinalizadas);
+router.get(
+  '/historial/finalizadas',
+  auth,
+  controller.obtenerTutoriasFinalizadas
+);
 
 module.exports = router;

@@ -2,9 +2,73 @@ const { Tutoria } = require('../models/TutoriaModel');
 const { Usuario } = require('../models/UsuarioModel');
 const { PropuestaDocente } = require('../models/PropuestaDocenteModel');
 const { PropuestaAlternativa } = require('../models/PropuestaAlternativaModel');
-const { Op } = require('sequelize'); // ✅ SOLO OPERADORES
-const { sequelize } = require('../db/conexion'); // ✅ TU CONEXIÓN REAL
+const { Materia } = require('../models/MateriaModel');
+const { DocenteMateria } = require('../models/DocenteMateriaModel');
+const { Op } = require('sequelize');
+const { sequelize } = require('../db/conexion');
 const { enviarCorreo } = require('../services/emailService');
+
+
+// ==================================================
+// 🔹 GET MATERIAS (COMBO)
+// ==================================================
+exports.obtenerMaterias = async (req, res) => {
+  try {
+    const materias = await Materia.findAll({
+      attributes: ['id', 'nombre']
+    });
+    res.json(materias);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error obteniendo materias' });
+  }
+};
+
+
+// ==================================================
+// 🔹 DOCENTES POR MATERIA (COMBO DEPENDIENTE)
+// ==================================================
+exports.obtenerDocentesPorMateria = async (req, res) => {
+  try {
+    const { materiaId } = req.params;
+
+    const docentes = await Usuario.findAll({
+      where: { rol: 'docente' },
+      attributes: ['id', 'nombre', 'email'],
+      include: [
+        {
+          model: DocenteMateria,
+          as: 'MateriasDocente',
+          where: { materia_id: materiaId },
+          attributes: []
+        }
+      ]
+    });
+
+    res.json(docentes);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error obteniendo docentes por materia' });
+  }
+};
+
+
+// ==================================================
+// 🔹 ESTUDIANTES (COMBO)
+// ==================================================
+exports.obtenerEstudiantes = async (req, res) => {
+  try {
+    const estudiantes = await Usuario.findAll({
+      where: { rol: 'estudiante' },
+      attributes: ['id', 'nombre', 'email']
+    });
+
+    res.json(estudiantes);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error obteniendo estudiantes' });
+  }
+};
 
 
 // ==================================================
@@ -18,7 +82,6 @@ exports.crearTutoria = async (req, res) => {
       return res.status(403).json({ error: 'Solo estudiantes pueden solicitar tutorías' });
     }
 
-    // 🔹 AÑADIDO (NO rompe nada)
     const {
       docente_id,
       materia_id,
@@ -71,7 +134,6 @@ exports.crearTutoria = async (req, res) => {
       return res.status(400).json({ error: 'El docente ya tiene una tutoría en ese horario' });
     }
 
-    // 🔹 AÑADIDO: numero_estudiantes_solicitados
     const nueva = await Tutoria.create({
       estudiante_id: usuario.id,
       docente_id,
@@ -87,7 +149,6 @@ exports.crearTutoria = async (req, res) => {
     const estudiante = await Usuario.findByPk(usuario.id);
     const docente = await Usuario.findByPk(docente_id);
 
-    // 🔹 CORREO MEJORADO (ESTUDIANTE)
     await enviarCorreo(
       estudiante.email,
       'Tutoría registrada',
@@ -98,15 +159,14 @@ exports.crearTutoria = async (req, res) => {
        <p><strong>Estado:</strong> Pendiente</p>`
     );
 
-    // 🔹 CORREO MEJORADO (DOCENTE)
     await enviarCorreo(
       docente.email,
       'Nueva solicitud de tutoría',
       `<h3>Nueva solicitud de tutoría</h3>
-       <p><strong>Estudiante solicitante:</strong> ${estudiante.nombre}</p>
+       <p><strong>Estudiante:</strong> ${estudiante.nombre}</p>
        <p><strong>Fecha:</strong> ${fecha}</p>
        <p><strong>Hora:</strong> ${hora_inicio} - ${hora_fin}</p>
-       <p><strong>Número de estudiantes esperados:</strong> ${nueva.numero_estudiantes_solicitados}</p>`
+       <p><strong>Estudiantes esperados:</strong> ${nueva.numero_estudiantes_solicitados}</p>`
     );
 
     res.json({ mensaje: 'Tutoría creada correctamente', tutoria: nueva });
@@ -119,7 +179,7 @@ exports.crearTutoria = async (req, res) => {
 
 
 // ==================================================
-// 🔹 EDITAR TUTORÍA (DOCENTE / PENDIENTE)
+// 🔹 EDITAR TUTORÍA (DOCENTE)
 // ==================================================
 exports.editarTutoria = async (req, res) => {
   try {
@@ -128,7 +188,9 @@ exports.editarTutoria = async (req, res) => {
     }
 
     const tutoria = await Tutoria.findByPk(req.params.id);
-    if (!tutoria) return res.status(404).json({ error: 'Tutoría no encontrada' });
+    if (!tutoria) {
+      return res.status(404).json({ error: 'Tutoría no encontrada' });
+    }
 
     if (tutoria.estado !== 'pendiente') {
       return res.status(400).json({ error: 'Solo tutorías pendientes pueden editarse' });
@@ -148,32 +210,44 @@ exports.editarTutoria = async (req, res) => {
 // 🔹 OBTENER TUTORÍAS
 // ==================================================
 exports.obtenerTutoriasEstudiante = async (req, res) => {
-  const tutorias = await Tutoria.findAll({
-    where: { estudiante_id: req.usuario.id },
-    order: [['fecha', 'DESC']]
-  });
-  res.json(tutorias);
+  try {
+    const tutorias = await Tutoria.findAll({
+      where: { estudiante_id: req.usuario.id },
+      order: [['fecha', 'DESC']]
+    });
+    res.json(tutorias);
+  } catch (error) {
+    res.status(500).json({ error: 'Error obteniendo tutorías' });
+  }
 };
 
 exports.obtenerTutoriasDocente = async (req, res) => {
-  const tutorias = await Tutoria.findAll({
-    where: { docente_id: req.usuario.id },
-    order: [['fecha', 'DESC']]
-  });
-  res.json(tutorias);
+  try {
+    const tutorias = await Tutoria.findAll({
+      where: { docente_id: req.usuario.id },
+      order: [['fecha', 'DESC']]
+    });
+    res.json(tutorias);
+  } catch (error) {
+    res.status(500).json({ error: 'Error obteniendo tutorías' });
+  }
 };
 
 exports.obtenerTutoriasFinalizadas = async (req, res) => {
-  const tutorias = await Tutoria.findAll({
-    where: { estado: 'finalizada' },
-    order: [['fecha', 'DESC']]
-  });
-  res.json(tutorias);
+  try {
+    const tutorias = await Tutoria.findAll({
+      where: { estado: 'finalizada' },
+      order: [['fecha', 'DESC']]
+    });
+    res.json(tutorias);
+  } catch (error) {
+    res.status(500).json({ error: 'Error obteniendo tutorías finalizadas' });
+  }
 };
 
 
 // ==================================================
-// 🔹 CAMBIAR ESTADO (CONFIRMAR / FINALIZAR)
+// 🔹 CAMBIAR ESTADO TUTORÍA
 // ==================================================
 exports.cambiarEstadoTutoria = async (req, res) => {
   try {
@@ -181,11 +255,12 @@ exports.cambiarEstadoTutoria = async (req, res) => {
       return res.status(403).json({ error: 'Solo el docente puede cambiar el estado' });
     }
 
-    // 🔹 AÑADIDO sin romper nada
     const { estado, numero_estudiantes_asistieron } = req.body;
 
     const tutoria = await Tutoria.findByPk(req.params.id);
-    if (!tutoria) return res.status(404).json({ error: 'Tutoría no encontrada' });
+    if (!tutoria) {
+      return res.status(404).json({ error: 'Tutoría no encontrada' });
+    }
 
     const transiciones = {
       pendiente: ['confirmada'],
@@ -198,7 +273,6 @@ exports.cambiarEstadoTutoria = async (req, res) => {
       return res.status(400).json({ error: 'Transición de estado no permitida' });
     }
 
-    // 🔹 AÑADIDO: solo guarda asistentes si se finaliza
     await tutoria.update({
       estado,
       numero_estudiantes_asistieron:
@@ -209,13 +283,12 @@ exports.cambiarEstadoTutoria = async (req, res) => {
 
     const estudiante = await Usuario.findByPk(tutoria.estudiante_id);
 
-    // 🔹 CORREO MEJORADO
     await enviarCorreo(
       estudiante.email,
       'Estado de tutoría actualizado',
-      `<h3>Tu tutoría fue finalizada</h3>
-       <p><strong>Estudiantes previstos:</strong> ${tutoria.numero_estudiantes_solicitados}</p>
-       <p><strong>Estudiantes que asistieron:</strong> ${tutoria.numero_estudiantes_asistieron ?? 'No registrado'}</p>`
+      `<h3>Estado actualizado</h3>
+       <p><strong>Estado:</strong> ${estado}</p>
+       <p><strong>Asistieron:</strong> ${tutoria.numero_estudiantes_asistieron ?? 'No registrado'}</p>`
     );
 
     res.json({ mensaje: 'Estado actualizado correctamente' });
@@ -228,7 +301,7 @@ exports.cambiarEstadoTutoria = async (req, res) => {
 
 
 // ==================================================
-// 🔹 CANCELAR + PROPONER ALTERNATIVA (DOCENTE)
+// 🔹 CANCELAR + PROPONER ALTERNATIVAS
 // ==================================================
 exports.cancelarConPropuesta = async (req, res) => {
   const t = await sequelize.transaction();
@@ -277,13 +350,13 @@ exports.cancelarConPropuesta = async (req, res) => {
 
     await enviarCorreo(
       estudiante.email,
-      'Tutoría cancelada - Nueva propuesta',
-      `<h3>El docente canceló la tutoría</h3>
+      'Tutoría cancelada',
+      `<h3>Tutoría cancelada</h3>
        <p><strong>Motivo:</strong> ${motivo}</p>
        <p>Revisa las nuevas propuestas en el sistema.</p>`
     );
 
-    res.json({ mensaje: 'Tutoría cancelada y propuesta enviada' });
+    res.json({ mensaje: 'Tutoría cancelada y propuestas enviadas' });
 
   } catch (error) {
     await t.rollback();
@@ -304,7 +377,7 @@ exports.aceptarPropuesta = async (req, res) => {
 
     const propuestaAlt = await PropuestaAlternativa.findByPk(req.params.id);
     if (!propuestaAlt) {
-      return res.status(404).json({ error: 'Propuesta alternativa no encontrada' });
+      return res.status(404).json({ error: 'Propuesta no encontrada' });
     }
 
     const propuestaDocente = await PropuestaDocente.findByPk(propuestaAlt.propuesta_id);
@@ -336,16 +409,12 @@ exports.aceptarPropuesta = async (req, res) => {
     await enviarCorreo(
       docente.email,
       'Propuesta aceptada',
-      `<h3>El estudiante aceptó tu propuesta</h3>
+      `<h3>Propuesta aceptada</h3>
        <p><strong>Fecha:</strong> ${propuestaAlt.fecha}</p>
-       <p><strong>Hora:</strong> ${propuestaAlt.hora_inicio} - ${propuestaAlt.hora_fin}</p>
-       <p><strong>Estudiantes esperados:</strong> ${tutoriaOriginal.numero_estudiantes_solicitados}</p>`
+       <p><strong>Hora:</strong> ${propuestaAlt.hora_inicio} - ${propuestaAlt.hora_fin}</p>`
     );
 
-    res.json({
-      mensaje: 'Propuesta aceptada y tutoría creada',
-      tutoria: nuevaTutoria
-    });
+    res.json({ mensaje: 'Propuesta aceptada', tutoria: nuevaTutoria });
 
   } catch (error) {
     console.error(error);
