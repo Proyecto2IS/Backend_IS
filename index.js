@@ -11,15 +11,13 @@ app.use(express.json());
 app.use(cors());
 
 // ================= CARGAR TODOS LOS MODELOS =================
-// 🔥 TODOS, SIN EXCEPCIÓN
+// 🔥 ESTO ES LO QUE CREA LAS TABLAS
+
 require('./models/UsuarioModel');
 require('./models/MateriaModel');
 require('./models/TutoriaModel');
 require('./models/DocenteMateriaModel');
 require('./models/DisponibilidadDocenteModel');
-require('./models/PropuestaDocenteModel');
-require('./models/PropuestaAlternativaModel');
-require('./models/HistorialEstadosModel'); // si lo usas
 
 // ================= ASOCIACIONES =================
 require('./models/asociaciones');
@@ -28,7 +26,7 @@ require('./models/asociaciones');
 app.use('/usuarios', require('./routes/usuario.routes'));
 app.use('/disponibilidad', require('./routes/disponibilidad.routes'));
 app.use('/tutorias', require('./routes/tutoria.routes'));
-app.use('/reportes', require('./routes/reporte.routes'));
+//app.use('/reportes', require('./routes/reporte.routes'));
 app.use('/auth', require('./routes/auth.routes'));
 
 // ================= RUTA BASE =================
@@ -42,6 +40,7 @@ const main = async () => {
     await sequelize.authenticate();
     console.log('✅ Conexión a la base de datos establecida correctamente.');
 
+    // 🔥 CREA TABLAS SI NO EXISTEN
     await sequelize.sync({ alter: false });
 
     app.listen(PORT, () => {
