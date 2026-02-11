@@ -1,69 +1,79 @@
-# Backend_IS
-Desarrolladores Backend
-Emily Yulexi Álava Dueñas – Dev Full Stack
-Elian Israel Zambrano Pinargote – Dev Backend
-Sistema de Gestión de Tutorías Académicas
-escripción General
-El Backend del Sistema de Gestión de Tutorías Académicas se encarga de la lógica de negocio, la seguridad, la gestión de datos y la exposición de una API REST que permite la comunicación con el frontend.
-Está desarrollado siguiendo una arquitectura MVC, aplicando buenas prácticas de desarrollo, control de versiones y pruebas unitarias.
-El sistema permite gestionar usuarios (estudiantes y docentes), materias, disponibilidades, solicitudes de tutoría, confirmaciones, cancelaciones y generación de reportes académicos.
-ecnologías Utilizadas
-Node.js
-Express
-MySQL
-Sequelize (ORM)
-JWT (JSON Web Tokens) – Autenticación y autorización
-bcrypt – Encriptación de contraseñas
-dotenv – Variables de entorno
-cors
-nodemon
-Jest & Supertest – Pruebas unitarias
-Arquitectura
-El proyecto sigue una arquitectura MVC (Model–View–Controller) organizada de la siguiente manera:
+<h1>Backend – Sistema de Gestión de Tutorías Académicas</h1>
+
+<h2>Descripción General</h2>
+<p>
+El Backend del Sistema de Gestión de Tutorías Académicas se encarga de la lógica
+de negocio, la seguridad, la gestión de datos y la exposición de una API REST
+que permite la comunicación con el frontend. El sistema está desarrollado
+siguiendo una arquitectura MVC y buenas prácticas de desarrollo.
+</p>
+
+<h2>Tecnologías Utilizadas</h2>
+<ul>
+  <li>Node.js</li>
+  <li>Express</li>
+  <li>MySQL</li>
+  <li>Sequelize (ORM)</li>
+  <li>JWT (JSON Web Tokens)</li>
+  <li>bcrypt</li>
+  <li>dotenv</li>
+  <li>cors</li>
+  <li>nodemon</li>
+  <li>Jest y Supertest</li>
+</ul>
+
+<h2>Arquitectura del Proyecto</h2>
+<p>
+El backend sigue una arquitectura MVC (Model–View–Controller), separando
+claramente las responsabilidades para facilitar el mantenimiento y escalabilidad.
+</p>
+
+<h2>Estructura del Proyecto</h2>
+<pre>
 backend/
-│── config/        # Configuraciones generales
-│── db/            # Conexión a la base de datos
-│── models/        # Modelos Sequelize
-│── controllers/   # Lógica de negocio
-│── routes/        # Endpoints de la API
-│── middleware/    # Autenticación y validaciones
-│── tests/         # Pruebas unitarias
-│── index.js       # Inicialización del servidor
-│── .env.example   # Variables de entorno de ejemplo
-Seguridad
-Autenticación mediante JWT
-Encriptación de contraseñas con bcrypt
-Protección de rutas mediante middleware
-Control de acceso por roles (estudiante / docente / administrador)
-Variables sensibles gestionadas con .env
-Módulos Principales
-Autenticación (login con correo institucional)
-Gestión de Usuarios
-Catálogo de Materias
-Disponibilidad del Docente
-Gestión de Tutorías
-Solicitud
-Aceptación
-Rechazo con alternativas
-Confirmación
-Cancelación
-Reportes
-Reportes por estudiante
-Reportes semanales
-Reportes por docente
-Pruebas Unitarias
-El backend cuenta con pruebas unitarias implementadas con Jest, cubriendo:
-Controladores de autenticación
-Middleware de seguridad
-Controladores de usuarios
-Tutorías
-Disponibilidad docente
-Reportes
-Ejecución del Proyecto
-Instalar dependencias:
+│── config/
+│── db/
+│── models/
+│── controllers/
+│── routes/
+│── middleware/
+│── tests/
+│── index.js
+│── .env.example
+</pre>
+
+<h2>Seguridad</h2>
+<ul>
+  <li>Autenticación mediante JWT</li>
+  <li>Contraseñas encriptadas con bcrypt</li>
+  <li>Protección de rutas mediante middleware</li>
+  <li>Control de acceso por roles</li>
+</ul>
+
+<h2>Módulos Principales</h2>
+<ul>
+  <li>Autenticación de usuarios</li>
+  <li>Gestión de usuarios y roles</li>
+  <li>Catálogo de materias</li>
+  <li>Disponibilidad del docente</li>
+  <li>Gestión completa de tutorías</li>
+  <li>Generación de reportes</li>
+</ul>
+
+<h2>Pruebas Unitarias</h2>
+<p>
+Se implementaron pruebas unitarias con Jest para validar controladores,
+middlewares y lógica de negocio del sistema.
+</p>
+
+<h2>Ejecución del Proyecto</h2>
+<pre>
 npm install
-Configurar variables de entorno:
-cp .env.example .env
-Ejecutar el servidor:
 npm run dev
-npm run dev
+</pre>
+
+<h2>Desarrolladores Backend</h2>
+<ul>
+  <li>Emily Yulexi Álava Dueñas – Dev Full Stack</li>
+  <li>Elian Israel Zambrano Pinargote – Dev Backend</li>
+</ul>
